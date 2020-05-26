@@ -594,7 +594,7 @@ const Observable = value => {
 
 ### MVC
 
-![](C:\Users\Livio Näf\Documents\FHNW\Webpr\JS-Toolbox\mvc.PNG)
+![](.\mvc.PNG)
 
 ### Example
 
