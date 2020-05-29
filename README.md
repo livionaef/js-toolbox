@@ -718,21 +718,265 @@ const NullSafe = x => {
 
 ## 11. Data Flow
 
+### Coordination schemata
+
+> Similar to concurrency
+
+1. No coordination needed
+2. Sequence (of side effects)
+3. Dependeny on former results
+
+#### No Coordination
+
+> Nothing to do !
+
+- Execution model: confined
+- All actions run independently
+
+#### Sequence
+
+> Actor
+
+- In a sequence of actions, each action can only start if the preceding one has finished
+-  How to achieve this => Delegated Coordination => Scheduler
+
+#### Result Dependency
+
+- Action B and C need the result of action A
+- A must be executed **exactly once** before B and C
+- How to do this => Implicit Coordination => DataFlowVariable
+
+### Scheduler Idea
+
+- Queue (FIFO) of functions that are started with a lock
+- Callback unlocks
+
+### DataFlowVariable
+
+- Function, that sets a value if it is not already set. Returns the value.
+- Lazy: Access to variables that will become available later
+- Trick: Do not set the value, but a function that returns the value
 
 
-## 12. Modules => toolbox must use modules!
+
+## 12. Modules
 
 > "Well-structured software is easy to write and to debug, and provides a collection of modules that can be reused to reduce future programming costs."
 >
 > - John Hughes
 
+### Why Modules?
+
+- Organize the Code
+- Clear dependencies
+- Avoid errors: Globals, Scoping, Namespace
+
+```javascript
+// avoid something like this in your html document
+<script src="fileA.js">
+<script src="fileB.js">
+<script src="fileC.js">
+// if fileA.js has a reference on fileC.js it won't work !!!
+```
+
+#### Distinguish
+
+- How I want to edit the code
+- How I want to deliver the code
+
+### ES6 Modules
+
+They are not...
+
+- Packages (those have versions)
+- Dependencies, Libraries, Releases
+- Units of publication
+- Objects
+
+#### Package Manager
+
+`webpack`, `npm`, `bower`, `yarn`, ...
+
+#### Build Tools
+
+`webpack`, `npm`, `grunt`, `gulp`, ...
+
+#### Legacy module systems
+
+`CommonJS`, `AMD`, `UMD`, ...
+
+#### Legacy Module Loader / Bundler
+
+`RequireJS`, `SystemJS`, `browserify`, ...
+
+### Modules are async
+
+```javascript
+// Use URI format as follows: "./myFile.js"
+<script src="./myFile.js" type="module"> // type implies "defer"
+import ("./myFile.js").then( modules => ... )
+// invasive, transitive impact
+```
+
+### Import Variants
+
+Always explicit!
+
+```javascript
+// most used
+import "module-name";
+import { export1, export2 } from "module-name";
+
+// other variants
+import defaultExport from "module-name";
+import * as name from "module-name";
+import { export } from "module-name";
+import { export as alias } from "module-name";
+var promise = import("module-name");
+```
+
+### Export Variants
+
+Always explicit!
+
+```javascript
+// most used
+export { name1, name2, ... , nameN };
+
+// other variants
+export function FunctionName() { .. }
+export const name1, name2, ... , nameN; // or let
+export class ClassName { .. }
+export default expression;
+export { name1 as default, .. };
+export * from .. ;
+export { name1, name2, ... , nameN } from .. ;
+```
+
+### Impacts
+
+- implicit "use-strict" exports are read-only !
+- no Global object, no Global "this", no Global hoisting
+- implicit "defer" mode => `document.writeln` is no longer useful
+- Modules are Namespaces
+- Modules are Singletons
+
+### SOP - Single Origin Policy
+
+- Modules are subject to the SOP
+- Problem at construction time: the File System is a **null origin**
+
+### Useful Tools
+
+- Developer Mode (suppress SOP) -> don't forget to set back!
+- Local Webserver
+- Disable cache!
+- Bundler (Rollup, Parcel, Webpack, ...)
+- Start Browser in Debug mode
+
+### Resources
+
+- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import
+- http://exploringjs.com/es6/ch_modules.html
 
 
-## 13. Transpilers, TS, PS, Elm
+
+## 13. Transpilers: TypeScript, PureScript, Elm
 
 > "The limits of my language are the limits of my world."
 >
 > - Ludwig Wittgenstein, Tractatus Logico-Philosophicus
+
+### What they have in common
+
+- All are transpiling to JavaScript !
+- Allow React / Elm Architecture for functional JavaScript / SPA
+  - TypeScript + React
+  - PureScript + Pux / Halogen
+  - Elm
+
+### The Cycle
+
+```javascript
+View -> Action -> State -> State ___________|
+ ^											|
+ |__________________________________________|
+```
+
+### TypeScript
+
+- Typed state
+- Actions as functions / lamdas
+- State immutability with discipline
+- Object / component abstraction
+
+### Elm
+
+- Typed state
+- Action type with values
+- State is immutable
+- Update function is a fold
+- Function composition
+
+### PureScript / Pux
+
+- Like Elm
+- But even more Haskell-ish
+- https://try.purescript.org/
+
+```javascript
+// signature
+// name  quantifier  type variables
+konst :: forall a b . a -> b -> a
+// definition
+konst x y = x
+```
+
+
+
+### Calling JavaScript (FFI)
+
+| TypeScript     | Type declaration     |
+| -------------- | -------------------- |
+| **PureScript** | **Type declaration** |
+| **Elm**        | **Port / Flag**      |
+
+### Applicability
+
+| TypeScript     | JS Environment     |
+| -------------- | ------------------ |
+| **PureScript** | **JS Environment** |
+| **Elm**        | **Browser**        |
+
+### Paradigm
+
+| TypeScript     | OO with Generics |
+| -------------- | ---------------- |
+| **PureScript** | **Functional**   |
+| **Elm**        | **Functional**   |
+
+### Approach
+
+| TypeScript     | Language               |
+| -------------- | ---------------------- |
+| **PureScript** | **Language & Tools**   |
+| **Elm**        | **Programming System** |
+
+### Cool
+
+| TypeScript     | Sum (union) type , String Literal type   |
+| -------------- | ---------------------------------------- |
+| **PureScript** | **Eff Monad, [GADT]**                    |
+| **Elm**        | **Time travel debug , SemVer guarantee** |
+
+### More Transpilers
+
+| ClojureScript    | Clojure (Lisp) |
+| ---------------- | -------------- |
+| **GHCJS**        | **Haskell**    |
+| **Babel**        | **JS**         |
+| **CoffeeScript** | **JS++**       |
+| **GrooScript**   | **Groovy**     |
 
 
 
